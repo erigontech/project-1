@@ -15,10 +15,9 @@ type ExampleAPI interface {
 	TraceTransaction(ctx context.Context, hash common.Hash, config *eth.TraceConfig) (interface{}, error)
 }
 
-func GetAPI(db ethdb.KV, eth ethdb.Backend, enabledApis []string, gascap uint64) []rpc.API {
-	dbReader := ethdb.NewObjectDatabase(db)
-	chainContxt := commands.NewChainContext(dbReader)
-	api := NewAPI(db, dbReader, chainContxt)
+func GetAPI(kv ethdb.KV, eth ethdb.Backend, enabledApis []string, gascap uint64) []rpc.API {
+	dbReader := ethdb.NewObjectDatabase(kv)
+	api := NewAPI(kv, dbReader)
 
 	var customAPIList []rpc.API
 
@@ -37,6 +36,6 @@ func GetAPI(db ethdb.KV, eth ethdb.Backend, enabledApis []string, gascap uint64)
 	}
 
 	// Add default TurboGeth api's
-	defaultAPIList := commands.GetAPI(db, eth, enabledApis, gascap)
+	defaultAPIList := commands.GetAPI(kv, eth, enabledApis, gascap)
 	return append(defaultAPIList, customAPIList...)
 }

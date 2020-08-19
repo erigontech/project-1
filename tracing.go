@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ledgerwatch/turbo-geth/common"
-	"github.com/ledgerwatch/turbo-geth/core"
 	"github.com/ledgerwatch/turbo-geth/core/rawdb"
 	"github.com/ledgerwatch/turbo-geth/eth"
 	"github.com/ledgerwatch/turbo-geth/ethdb"
@@ -16,14 +15,12 @@ import (
 type API struct {
 	db       ethdb.KV
 	dbReader ethdb.Getter
-	chainCtx core.ChainContext
 }
 
-func NewAPI(db ethdb.KV, dbReader ethdb.Getter, chainCtx core.ChainContext) *API {
+func NewAPI(db ethdb.KV, dbReader ethdb.Getter) *API {
 	return &API{
 		db:       db,
 		dbReader: dbReader,
-		chainCtx: chainCtx,
 	}
 }
 
@@ -36,7 +33,8 @@ func (api *API) TraceTransaction(ctx context.Context, hash common.Hash, config *
 		return nil, fmt.Errorf("transaction %#x not found", hash)
 	}
 	bc := adapter.NewBlockGetter(api.dbReader)
-	msg, vmctx, ibs, _, err := transactions.ComputeTxEnv(ctx, bc, params.MainnetChainConfig, api.chainCtx, api.db, blockHash, txIndex)
+	cc := adapter.NewChainContext(api.dbReader)
+	msg, vmctx, ibs, _, err := transactions.ComputeTxEnv(ctx, bc, params.MainnetChainConfig, cc, api.db, blockHash, txIndex)
 	if err != nil {
 		return nil, err
 	}
