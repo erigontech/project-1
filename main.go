@@ -43,6 +43,7 @@ func main() {
 // Create interface for your API
 type ExampleAPI interface {
 	TraceTransaction(ctx context.Context, hash common.Hash, config *eth.TraceConfig) (interface{}, error)
+	GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool) (map[string]interface{}, error)
 }
 
 func APIList(kv ethdb.KV, eth ethdb.Backend, cfg *cli.Flags) []rpc.API {
