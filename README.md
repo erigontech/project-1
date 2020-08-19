@@ -15,3 +15,8 @@ To change TG version use exact git commit:
 ```
 go get -u github.com/ledgerwatch/turbo-geth@7a64e9d4b65df614f3a62ad7a513cdcaea508fb0
 ```
+
+Run: 
+```
+go run . --private.api.addr=127.0.0.1:9090 --http.api="eth,debug,example"
+```
