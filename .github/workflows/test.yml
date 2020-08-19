@@ -33,7 +33,7 @@ jobs:
           key: go-${{ matrix.os }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
 
       - name: Test
-        run: make test
+        run: go test ./...
 
       - name: Race
-        run: make race
+        run: go test -race ./...
