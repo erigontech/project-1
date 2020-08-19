@@ -18,7 +18,6 @@ import (
 	"github.com/ledgerwatch/turbo-geth/eth"
 	"github.com/ledgerwatch/turbo-geth/eth/tracers"
 	"github.com/ledgerwatch/turbo-geth/ethdb"
-	"github.com/ledgerwatch/turbo-geth/internal/ethapi"
 	"github.com/ledgerwatch/turbo-geth/params"
 	"github.com/ledgerwatch/turbo-geth/rpc"
 )
@@ -104,7 +103,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, vmctx vm.Cont
 	// Depending on the tracer type, format and return the output
 	switch tracer := tracer.(type) {
 	case *vm.StructLogger:
-		return &ethapi.ExecutionResult{
+		return &rpc.ExecutionResult{
 			Gas:         result.UsedGas,
 			Failed:      result.Failed(),
 			ReturnValue: fmt.Sprintf("%x", result.Return()),
