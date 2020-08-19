@@ -4,7 +4,8 @@ go 1.14
 
 require (
 	github.com/btcsuite/btcd v0.20.1-beta // indirect
-	github.com/ledgerwatch/turbo-geth v0.0.0-20200819002502-0c2fb481051e
+	github.com/ledgerwatch/turbo-geth v0.0.0-20200819025609-057f6e5bb6b8
+	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/shirou/gopsutil v2.20.7+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
