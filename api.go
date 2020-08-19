@@ -10,23 +10,25 @@ import (
 	"github.com/ledgerwatch/turbo-geth/rpc"
 )
 
-type MyAPI interface {
+// Create interface for your API
+type ExampleAPI interface {
 	TraceTransaction(ctx context.Context, hash common.Hash, config *eth.TraceConfig) (interface{}, error)
 }
 
 func GetAPI(db ethdb.KV, eth ethdb.Backend, enabledApis []string, gascap uint64) []rpc.API {
 	dbReader := ethdb.NewObjectDatabase(db)
-	api := NewAPI(db, dbReader)
+	chainContxt := commands.NewChainContext(dbReader)
+	api := NewAPI(db, dbReader, chainContxt)
 
 	var customAPIList []rpc.API
 
 	for _, enabledAPI := range enabledApis {
 		switch enabledAPI {
-		case "magic":
+		case "example":
 			customAPIList = append(customAPIList, rpc.API{
-				Namespace: "eth",
+				Namespace: "example", // replace it by preferred namespace
 				Public:    true,
-				Service:   MyAPI(api),
+				Service:   ExampleAPI(api),
 				Version:   "1.0",
 			})
 		default:
@@ -34,6 +36,7 @@ func GetAPI(db ethdb.KV, eth ethdb.Backend, enabledApis []string, gascap uint64)
 		}
 	}
 
+	// Add default TurboGeth api's
 	defaultAPIList := commands.GetAPI(db, eth, enabledApis, gascap)
 	return append(defaultAPIList, customAPIList...)
 }
