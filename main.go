@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	cmd, cfg := cli.RootCommand()
+	cmd, cfg := cli.RootCommand() // to understand how you can configure command, see: https://github.com/spf13/cobra
 	if err := utils.SetupCobra(cmd); err != nil {
 		panic(err)
 	}
@@ -29,7 +29,7 @@ func main() {
 			return nil
 		}
 
-		var APIList = APIList(db, txPool, cfg)
+		APIList := APIList(db, txPool, cfg)
 		cli.StartRpcServer(cmd.Context(), *cfg, APIList)
 		return nil
 	}
