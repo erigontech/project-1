@@ -5,8 +5,8 @@
 [x] do somethng with "github.com/ledgerwatch/turbo-geth/internal/ethapi" package
 [] try ethash.NewFaker()
 [x] move flags to package
-[] add way to include all TG eth_ and debug_ methods by default
-[] make project minimalistic
+[x] add way to include all TG eth_ and debug_ methods by default
+[x] make project minimalistic
 [] rename chaindata to datadir? (now datadir logic smashed across Config.instanceDir and utils.setDataDir)
 
 Readme
