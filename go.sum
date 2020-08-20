@@ -219,6 +219,8 @@ github.com/ledgerwatch/turbo-geth v0.0.0-20200820024638-b34dd91f8a32 h1:JLUHLrK9
 github.com/ledgerwatch/turbo-geth v0.0.0-20200820024638-b34dd91f8a32/go.mod h1:jgMwWb0RNTJBGVYjONPIQvUMQl3Qg1CVFGJTyuVwkLs=
 github.com/ledgerwatch/turbo-geth v0.0.0-20200820024946-213cf2cbec57 h1:524yq2mEngHOeC9RP5AS4jZqxsDu3Fd/lCyMQRGS9F0=
 github.com/ledgerwatch/turbo-geth v0.0.0-20200820024946-213cf2cbec57/go.mod h1:jgMwWb0RNTJBGVYjONPIQvUMQl3Qg1CVFGJTyuVwkLs=
+github.com/ledgerwatch/turbo-geth v0.0.0-20200820025947-65f4fdfbd4fc h1:vRbgcWZDApQP+byDNNFy81eIIbwhU5Bx3MDjFM100mQ=
+github.com/ledgerwatch/turbo-geth v0.0.0-20200820025947-65f4fdfbd4fc/go.mod h1:lgyTnmWSosLlNGUxchaemxYxioJ5MG04oOhYHij2KDI=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/llgcode/draw2d v0.0.0-20180825133448-f52c8a71aff0/go.mod h1:mVa0dA29Db2S4LVqDYLlsePDzRJLDfdhVZiI15uY0FA=
 github.com/llgcode/ps v0.0.0-20150911083025-f1443b32eedb/go.mod h1:1l8ky+Ew27CMX29uG+a2hNOKpeNYEQjjtiALiBlFQbY=
