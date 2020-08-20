@@ -15,16 +15,14 @@ import (
 	"github.com/ledgerwatch/turbo-geth/turbo/transactions"
 )
 
+// API - implementation of ExampleApi
 type API struct {
-	kv       ethdb.KV
-	dbReader ethdb.Getter
+	kv ethdb.KV
+	db ethdb.Getter
 }
 
-func NewAPI(kv ethdb.KV, dbReader ethdb.Getter) *API {
-	return &API{
-		kv:       kv,
-		dbReader: dbReader,
-	}
+func NewAPI(kv ethdb.KV, db ethdb.Getter) *API {
+	return &API{kv: kv, db: db}
 }
 
 // GetBlockByNumber see https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getblockbynumber
@@ -32,12 +30,12 @@ func NewAPI(kv ethdb.KV, dbReader ethdb.Getter) *API {
 func (api *API) GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool) (map[string]interface{}, error) {
 	additionalFields := make(map[string]interface{})
 
-	block := rawdb.ReadBlockByNumber(api.dbReader, uint64(number.Int64()))
+	block := rawdb.ReadBlockByNumber(api.db, uint64(number.Int64()))
 	if block == nil {
 		return nil, fmt.Errorf("block not found: %d", number.Int64())
 	}
 
-	additionalFields["totalDifficulty"] = rawdb.ReadTd(api.dbReader, block.Hash(), uint64(number.Int64()))
+	additionalFields["totalDifficulty"] = rawdb.ReadTd(api.db, block.Hash(), uint64(number.Int64()))
 	response, err := ethapi.RPCMarshalBlock(block, true, fullTx, additionalFields)
 
 	if err == nil && number == rpc.PendingBlockNumber {
@@ -53,12 +51,12 @@ func (api *API) GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fu
 // and returns them as a JSON object.
 func (api *API) TraceTransaction(ctx context.Context, hash common.Hash, config *eth.TraceConfig) (interface{}, error) {
 	// Retrieve the transaction and assemble its EVM context
-	tx, blockHash, _, txIndex := rawdb.ReadTransaction(api.dbReader, hash)
+	tx, blockHash, _, txIndex := rawdb.ReadTransaction(api.db, hash)
 	if tx == nil {
 		return nil, fmt.Errorf("transaction %#x not found", hash)
 	}
-	bc := adapter.NewBlockGetter(api.dbReader)
-	cc := adapter.NewChainContext(api.dbReader)
+	bc := adapter.NewBlockGetter(api.db)
+	cc := adapter.NewChainContext(api.db)
 	msg, vmctx, ibs, _, err := transactions.ComputeTxEnv(ctx, bc, params.MainnetChainConfig, cc, api.kv, blockHash, txIndex)
 	if err != nil {
 		return nil, err

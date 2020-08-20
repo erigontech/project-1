@@ -1,22 +1,13 @@
-# ToDo
-[x] include TG by go.mod
-[x] just dup something
-[x] github actions
-[x] do somethng with "github.com/ledgerwatch/turbo-geth/internal/ethapi" package
-[] try ethash.NewFaker()
-[x] move flags to package
-[x] add way to include all TG eth_ and debug_ methods by default
-[x] make project minimalistic
-[] rename chaindata to datadir? (now datadir logic smashed across Config.instanceDir and utils.setDataDir)
-
 Readme
 
-To change TG version use exact git commit:
+To upgrade TG version - use exact git commit. For example:
 ```
-go get -u github.com/ledgerwatch/turbo-geth@7a64e9d4b65df614f3a62ad7a513cdcaea508fb0
+go get -u github.com/ledgerwatch/turbo-geth@213cf2cbec5792c9b23ab3c3ffa7f1b662d4188e
 ```
 
 Run: 
 ```
 go run . --private.api.addr=127.0.0.1:9090 --http.api="eth,debug,example"
 ```
+
+Docs: https://github.com/ledgerwatch/turbo-geth/blob/master/cmd/rpcdaemon/Readme.md

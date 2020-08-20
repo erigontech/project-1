@@ -17,21 +17,15 @@ import (
 
 func main() {
 	cmd, cfg := cli.RootCommand() // to understand how you can configure command, see: https://github.com/spf13/cobra
-	if err := utils.SetupCobra(cmd); err != nil {
-		panic(err)
-	}
-	defer utils.StopDebug()
-
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		db, txPool, err := cli.OpenDB(*cfg)
+		db, backend, err := cli.OpenDB(*cfg)
 		if err != nil {
 			log.Error("Could not connect to remoteDb", "error", err)
 			return nil
 		}
 
-		APIList := APIList(db, txPool, cfg)
-		cli.StartRpcServer(cmd.Context(), *cfg, APIList)
-		return nil
+		apiList := APIList(db, backend, cfg)
+		return cli.StartRpcServer(cmd.Context(), *cfg, apiList)
 	}
 
 	if err := cmd.ExecuteContext(utils.RootContext()); err != nil {
