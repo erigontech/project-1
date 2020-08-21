@@ -15,3 +15,8 @@ Content-Type: application/json
 }
 
 ###
+
+curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"example_localFork", "params": ["latest", [
+{"from": "0x8BFBB529A9E85fDC4b70A4FCdC0D68Bb298B8816", "gas": "0x100000", "gasPrice": "0x1000", "value": "0x34000", "nonce": "0x96", "input": ""},
+{"from": "0x8BFBB529A9E85fDC4b70A4FCdC0D68Bb298B8816", "gas": "0x100000", "gasPrice": "0x1000", "value": "0x34000", "nonce": "0x97", "input": ""}
+], []], "id":1}' localhost:8545

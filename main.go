@@ -38,6 +38,7 @@ func main() {
 type ExampleAPI interface {
 	TraceTransaction(ctx context.Context, hash common.Hash, config *eth.TraceConfig) (interface{}, error)
 	GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool) (map[string]interface{}, error)
+	LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*SendTxArgs, queries []*CallArgs) (interface{}, error)
 }
 
 func APIList(kv ethdb.KV, eth ethdb.Backend, cfg *cli.Flags) []rpc.API {
