@@ -151,7 +151,7 @@ func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*Se
 		if execResult, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(uint64(*args.Gas))); err == nil {
 			queryResults = append(queryResults, execResult)
 		} else {
-			return nil, fmt.Errorf("localFork: transaction %d failed: %v", i, err)
+			return nil, fmt.Errorf("localFork: query %d failed: %v", i, err)
 		}
 	}
 	return LocalForkResponse{TxResults: txResults, QueryResults: queryResults}, nil
