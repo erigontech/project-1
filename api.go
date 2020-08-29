@@ -102,11 +102,14 @@ func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*Se
 		blockNum = uint64(number.Int64())
 	}
 	fmt.Printf("Blocknum: %d\n", blockNum)
+	prevHeaderHash := rawdb.ReadCanonicalHash(api.db, blockNum)
+	prevHeader := rawdb.ReadHeader(api.db, prevHeaderHash, blockNum)
 	reader := adapter.NewStateReader(api.kv, blockNum)
 	ibs := state.New(reader)
 	var header types.Header
 	header.Number = big.NewInt(int64(blockNum) + 1)
 	header.Difficulty = big.NewInt(1000000)
+	header.Time = prevHeader.Time + 14
 	cc := adapter.NewChainContext(api.db)
 	var txResults []*core.ExecutionResult
 	for i, args := range txs {
