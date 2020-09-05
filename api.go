@@ -86,6 +86,7 @@ type LocalForkRequest struct {
 type LocalForkResponse struct {
 	TxResults    []*core.ExecutionResult `json:"txResults"`
 	QueryResults []*core.ExecutionResult `json:"queryResults"`
+	BlockNumber  uint64                  `json:"blockNumber"`
 }
 
 func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*SendTxArgs, queries []*CallArgs) (interface{}, error) {
@@ -121,7 +122,11 @@ func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*Se
 		}
 		value, _ := uint256.FromBig((*big.Int)(args.Value))
 		gasPrice, _ := uint256.FromBig((*big.Int)(args.GasPrice))
-		msg := types.NewMessage(args.From, args.To, uint64(*args.Nonce), value, uint64(*args.Gas), gasPrice, input, true /* checkNonce */)
+		var nonce uint64
+		if args.Nonce != nil {
+			nonce = uint64(*args.Nonce)
+		}
+		msg := types.NewMessage(args.From, args.To, nonce, value, uint64(*args.Gas), gasPrice, input, args.Nonce != nil /* checkNonce */)
 		EVMcontext := core.NewEVMContext(msg, &header, cc, nil)
 		// Not yet the searched for transaction, execute on top of the current state
 		vmenv := vm.NewEVM(EVMcontext, ibs, params.MainnetChainConfig, vm.Config{})
@@ -157,7 +162,7 @@ func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*Se
 			return nil, fmt.Errorf("localFork: query %d failed: %v", i, err)
 		}
 	}
-	return LocalForkResponse{TxResults: txResults, QueryResults: queryResults}, nil
+	return LocalForkResponse{TxResults: txResults, QueryResults: queryResults, BlockNumber: blockNum}, nil
 }
 
 // GetBlockByNumber see https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getblockbynumber

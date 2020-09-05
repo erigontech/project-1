@@ -23,13 +23,14 @@ The custom method is called `example_localFork`.
 ### Input
 The input consists of 3 paramters (`params`):
 1. Block number (or "latest" to use the latest available block) after which the execution will be applied
-2. Array of unsigned transactions. Each transaction has fields `from`, `to`, `gas` (hex number in quotes), `value` (in wei, hex number in quotes), `nonce` (hex value in quotes), `input` (hex value in quotes). The field `to` can be omitted, which means it is contract-creating transaction.
+2. Array of unsigned transactions. Each transaction has fields `from`, `to`, `gas` (hex number in quotes), `value` (in wei, hex number in quotes), `nonce` (hex value in quotes), `input` (hex value in quotes). The field `to` can be omitted, which means it is contract-creating transaction. The field `nonce` can be ommitted, in which case the correctness of the nonce is not checked.
 3. Array of queries (the same input as for `eth_call`). A query has the same fields, except for `nonce`.
 
 ### Output
 The output is the object with two fields `txResults`, and `queryResults`:
 1. The field `txResults` contains an array, with the same number of elements as the second input (transactions) has. Each element in the `txResults` corresponds to the transaction in the input. Each element has fields `UsedGas`, `Err`, and `ReturnData`. Fields `Err` and `ReturnData` can have `null` values.
 2. The field `queryResults` contains an array, with the same number of elements as the second input (transactions) has. Each element in the `txResults` corresponds to the transaction in the input. Each element has fields `UsedGas`, `Err`, and `ReturnData`. Fields `Err` and `ReturnData` can have `null` values.
+3. The field `blockNumber` returns a number equal to the block number at which the transactions and queries were executed.
 
 ## Example
 Input
