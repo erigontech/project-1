@@ -13,23 +13,20 @@ import (
 	"github.com/ledgerwatch/turbo-geth/core/state"
 	"github.com/ledgerwatch/turbo-geth/core/types"
 	"github.com/ledgerwatch/turbo-geth/core/vm"
-	"github.com/ledgerwatch/turbo-geth/eth"
-	"github.com/ledgerwatch/turbo-geth/eth/stagedsync/stages"
 	"github.com/ledgerwatch/turbo-geth/ethdb"
 	"github.com/ledgerwatch/turbo-geth/params"
 	"github.com/ledgerwatch/turbo-geth/rpc"
 	"github.com/ledgerwatch/turbo-geth/turbo/adapter"
-	"github.com/ledgerwatch/turbo-geth/turbo/adapter/ethapi"
-	"github.com/ledgerwatch/turbo-geth/turbo/transactions"
+	"github.com/ledgerwatch/turbo-geth/turbo/rpchelper"
 )
 
 // API - implementation of ExampleApi
 type API struct {
 	kv ethdb.KV
-	db ethdb.Getter
+	db ethdb.Database
 }
 
-func NewAPI(kv ethdb.KV, db ethdb.Getter) *API {
+func NewAPI(kv ethdb.KV, db ethdb.Database) *API {
 	return &API{kv: kv, db: db}
 }
 
@@ -89,26 +86,27 @@ type LocalForkResponse struct {
 	BlockNumber  uint64                  `json:"blockNumber"`
 }
 
-func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*SendTxArgs, queries []*CallArgs) (interface{}, error) {
-	var blockNum uint64
-	if number == rpc.LatestBlockNumber {
-		var err error
-		blockNum, _, err = stages.GetStageProgress(api.db, stages.Execution)
-		if err != nil {
-			return nil, fmt.Errorf("lockFork, getting latest block number: %v", err)
-		}
-	} else if number == rpc.PendingBlockNumber || number == rpc.EarliestBlockNumber {
-		return nil, fmt.Errorf("localFork, pending and earliest blocks are not supported")
-	} else {
-		blockNum = uint64(number.Int64())
+func (api *API) LocalFork(ctx context.Context, blockNrOrHash rpc.BlockNumberOrHash, txs []*SendTxArgs, queries []*CallArgs) (interface{}, error) {
+	tx, err1 := api.db.Begin(ctx, ethdb.RO)
+	if err1 != nil {
+		return nil, fmt.Errorf("call cannot open tx: %v", err1)
 	}
-	fmt.Printf("Blocknum: %d\n", blockNum)
-	prevHeaderHash := rawdb.ReadCanonicalHash(api.db, blockNum)
-	prevHeader := rawdb.ReadHeader(api.db, prevHeaderHash, blockNum)
-	reader := adapter.NewStateReader(api.kv, blockNum)
-	ibs := state.New(reader)
+	defer tx.Rollback()
+	blockNumber, _, err := rpchelper.GetBlockNumber(blockNrOrHash, tx)
+	if err != nil {
+		return nil, err
+	}
+	var stateReader state.StateReader
+	if num, ok := blockNrOrHash.Number(); ok && num == rpc.LatestBlockNumber {
+		stateReader = state.NewPlainStateReader(tx)
+	} else {
+		stateReader = state.NewPlainDBState(tx.(ethdb.HasTx).Tx(), blockNumber)
+	}
+	prevHeaderHash, err := rawdb.ReadCanonicalHash(api.db, blockNumber)
+	prevHeader := rawdb.ReadHeader(api.db, prevHeaderHash, blockNumber)
+	ibs := state.New(stateReader)
 	var header types.Header
-	header.Number = big.NewInt(int64(blockNum) + 1)
+	header.Number = big.NewInt(int64(blockNumber) + 1)
 	header.Difficulty = big.NewInt(1000000)
 	header.Time = prevHeader.Time + 14
 	cc := adapter.NewChainContext(api.db)
@@ -137,7 +135,7 @@ func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*Se
 		}
 		// Ensure any modifications are committed to the state
 		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		if err := ibs.FinalizeTx(vmenv.ChainConfig().WithEIPsFlags(context.Background(), header.Number), reader); err != nil {
+		if err := ibs.FinalizeTx(vmenv.ChainConfig().WithEIPsFlags(context.Background(), header.Number), state.NewNoopWriter()); err != nil {
 			return nil, fmt.Errorf("localFork: finalizeTx %d: %v\n", i, err)
 		}
 	}
@@ -162,45 +160,5 @@ func (api *API) LocalFork(ctx context.Context, number rpc.BlockNumber, txs []*Se
 			return nil, fmt.Errorf("localFork: query %d failed: %v", i, err)
 		}
 	}
-	return LocalForkResponse{TxResults: txResults, QueryResults: queryResults, BlockNumber: blockNum}, nil
-}
-
-// GetBlockByNumber see https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getblockbynumber
-// see internal/ethapi.PublicBlockChainAPI.GetBlockByNumber
-func (api *API) GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool) (map[string]interface{}, error) {
-	additionalFields := make(map[string]interface{})
-
-	block := rawdb.ReadBlockByNumber(api.db, uint64(number.Int64()))
-	if block == nil {
-		return nil, fmt.Errorf("block not found: %d", number.Int64())
-	}
-
-	additionalFields["totalDifficulty"] = rawdb.ReadTd(api.db, block.Hash(), uint64(number.Int64()))
-	response, err := ethapi.RPCMarshalBlock(block, true, fullTx, additionalFields)
-
-	if err == nil && number == rpc.PendingBlockNumber {
-		// Pending blocks need to nil out a few fields
-		for _, field := range []string{"hash", "nonce", "miner"} {
-			response[field] = nil
-		}
-	}
-	return response, err
-}
-
-// TraceTransaction returns the structured logs created during the execution of EVM
-// and returns them as a JSON object.
-func (api *API) TraceTransaction(ctx context.Context, hash common.Hash, config *eth.TraceConfig) (interface{}, error) {
-	// Retrieve the transaction and assemble its EVM context
-	tx, blockHash, _, txIndex := rawdb.ReadTransaction(api.db, hash)
-	if tx == nil {
-		return nil, fmt.Errorf("transaction %#x not found", hash)
-	}
-	bc := adapter.NewBlockGetter(api.db)
-	cc := adapter.NewChainContext(api.db)
-	msg, vmctx, ibs, _, err := transactions.ComputeTxEnv(ctx, bc, params.MainnetChainConfig, cc, api.kv, blockHash, txIndex)
-	if err != nil {
-		return nil, err
-	}
-	// Trace the transaction and return
-	return transactions.TraceTx(ctx, msg, vmctx, ibs, config)
+	return LocalForkResponse{TxResults: txResults, QueryResults: queryResults, BlockNumber: blockNumber}, nil
 }
